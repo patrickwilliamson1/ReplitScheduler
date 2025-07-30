@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HVAC Scheduler Widget</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- FullCalendar CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
+</head>
+<body>
+    <div class="container-fluid p-0">
+        <!-- Header -->
+        <header class="navbar navbar-dark bg-primary px-3">
+            <div class="navbar-brand">
+                <i class="fas fa-thermometer-half me-2"></i>
+                HVAC Scheduler
+            </div>
+            <div class="navbar-nav flex-row">
+                <button class="btn btn-outline-light btn-sm me-2" id="exportBtn">
+                    <i class="fas fa-download me-1"></i>
+                    Export
+                </button>
+                <button class="btn btn-outline-light btn-sm me-2" id="importBtn">
+                    <i class="fas fa-upload me-1"></i>
+                    Import
+                </button>
+                <input type="file" id="importFileInput" accept=".json" style="display: none;">
+                <button class="btn btn-outline-danger btn-sm me-2" id="clearAllBtn">
+                    <i class="fas fa-trash me-1"></i>
+                    Clear All
+                </button>
+                <button class="btn btn-outline-light btn-sm me-2" id="addEventBtn">
+                    <i class="fas fa-plus me-1"></i>
+                    Add Event
+                </button>
+                <button class="btn btn-outline-light btn-sm" id="editUnoccupiedBtn">
+                    <i class="fas fa-cog me-1"></i>
+                    Edit Unoccupied
+                </button>
+            </div>
+        </header>
+
+
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Calendar View -->
+            <div id="calendarViewContainer" class="view-container">
+                <div class="row g-0 h-100">
+                    <div class="col-12">
+                        <!-- Current Status Header -->
+                        <div class="bg-dark border-bottom px-3 py-2">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <div id="calendarCurrentStatus" class="d-flex align-items-center me-3">
+                                        <i class="fas fa-clock text-warning me-2"></i>
+                                        <span class="text-light">Current: <strong id="calendarCurrentName">Loading...</strong></span>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-warning" id="unoccupiedSettingsBtn" title="Edit Current Setting">
+                                        <i class="fas fa-edit me-1"></i>
+                                        Edit Current Setting
+                                    </button>
+                                </div>
+                                <div id="calendarNextEvent" class="d-flex align-items-center text-muted">
+                                    <i class="fas fa-forward me-1"></i>
+                                    <small id="calendarNextText">Next: Loading...</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="calendar" class="h-100"></div>
+                    </div>
+                </div>
+            </div>
+
+
+        </main>
+    </div>
+
+    <!-- Event Modal -->
+    <div class="modal fade" id="eventModal" tabindex="-1" aria-labelledby="eventModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content bg-dark">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="eventModalLabel">
+                        <i class="fas fa-plus-circle me-2"></i>
+                        <span id="modalTitleText">Add Schedule Event</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="eventForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="eventName" class="form-label">Event Name *</label>
+                                    <input type="text" class="form-control" id="eventName" placeholder="Enter event name" required>
+                                    <small class="text-muted">Cannot use "Unoccupied" as it's reserved for the default schedule</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="scheduleType" class="form-label">Schedule Type *</label>
+                                    <select class="form-select" id="scheduleType" required>
+                                        <option value="thermostat">Thermostat</option>
+                                        <option value="thermostat+humidistat">Thermostat + Humidistat</option>
+                                        <option value="humidistat">Humidistat</option>
+                                        <option value="lighting">Lighting</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="repeatFrequency" class="form-label">Repeat Frequency *</label>
+                            <select class="form-select" id="repeatFrequency" required>
+                                <option value="never">Never (One-time)</option>
+                                <option value="custom">Custom Days</option>
+                            </select>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="scheduleStartDate" class="form-label" id="scheduleStartDateLabel">Schedule Start Date *</label>
+                                    <input type="date" class="form-control" id="scheduleStartDate" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="scheduleEndDate" class="form-label">Schedule End Date</label>
+                                    <input type="date" class="form-control" id="scheduleEndDate">
+                                    <div class="form-check mt-2">
+                                        <input class="form-check-input" type="checkbox" id="neverEnding" checked>
+                                        <label class="form-check-label" for="neverEnding">
+                                            Never ending
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="customDaysContainer" class="mb-3 d-none">
+                            <label class="form-label">Select Days</label>
+                            <div class="d-flex justify-content-between" style="max-width: 350px;">
+                                <div class="text-center">
+                                    <div class="fw-bold">S</div>
+                                    <input class="form-check-input" type="checkbox" value="sunday" id="daySunday" checked>
+                                </div>
+                                <div class="text-center">
+                                    <div class="fw-bold">M</div>
+                                    <input class="form-check-input" type="checkbox" value="monday" id="dayMonday" checked>
+                                </div>
+                                <div class="text-center">
+                                    <div class="fw-bold">T</div>
+                                    <input class="form-check-input" type="checkbox" value="tuesday" id="dayTuesday" checked>
+                                </div>
+                                <div class="text-center">
+                                    <div class="fw-bold">W</div>
+                                    <input class="form-check-input" type="checkbox" value="wednesday" id="dayWednesday" checked>
+                                </div>
+                                <div class="text-center">
+                                    <div class="fw-bold">T</div>
+                                    <input class="form-check-input" type="checkbox" value="thursday" id="dayThursday" checked>
+                                </div>
+                                <div class="text-center">
+                                    <div class="fw-bold">F</div>
+                                    <input class="form-check-input" type="checkbox" value="friday" id="dayFriday" checked>
+                                </div>
+                                <div class="text-center">
+                                    <div class="fw-bold">S</div>
+                                    <input class="form-check-input" type="checkbox" value="saturday" id="daySaturday" checked>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Excluded Dates Section (only for recurring schedules) -->
+                        <div class="mb-3" id="excludedDatesSection" style="display: none;">
+                            <div class="card bg-secondary">
+                                <div class="card-header" style="cursor: pointer;" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-0">Excluded Dates</h6>
+                                            <small class="text-muted">Dates when this recurring schedule will not run</small>
+                                        </div>
+                                        <i class="fas fa-chevron-down"></i>
+                                    </div>
+                                </div>
+                                <div class="card-body" style="display: none;">
+                                    <div id="excludedDatesList" class="mb-2">
+                                        <!-- Excluded dates will be shown here -->
+                                    </div>
+                                    <div class="text-muted" id="noExcludedDates">
+                                        <em>No excluded dates</em>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="timeSetting" class="form-label">Time Setting *</label>
+                            <select class="form-select" id="timeSetting" required>
+                                <option value="time">Specific Time</option>
+                                <option value="sunrise">Sunrise Offset</option>
+                                <option value="sunset">Sunset Offset</option>
+                            </select>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="startTime" class="form-label" id="startTimeLabel">Start Time *</label>
+                                    <input type="time" class="form-control" id="startTime" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="endTime" class="form-label" id="endTimeLabel">End Time *</label>
+                                    <input type="time" class="form-control" id="endTime" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dynamic Settings based on Schedule Type -->
+                        <!-- Thermostat Settings -->
+                        <div class="card bg-secondary mb-3" id="thermostatSettings">
+                            <div class="card-header">
+                                <h6 class="mb-0">HVAC Settings</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="systemMode" class="form-label">System Mode</label>
+                                            <select class="form-select" id="systemMode">
+                                                <option value="Cool">Cool</option>
+                                                <option value="Heat">Heat</option>
+                                                <option value="Auto">Auto</option>
+                                                <option value="Off">Off</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="fanSetting" class="form-label">Fan Setting</label>
+                                            <select class="form-select" id="fanSetting">
+                                                <option value="auto">Auto</option>
+                                                <option value="10">10 min/hr</option>
+                                                <option value="20">20 min/hr</option>
+                                                <option value="30">30 min/hr</option>
+                                                <option value="40">40 min/hr</option>
+                                                <option value="50">50 min/hr</option>
+                                                <option value="60">60 min/hr</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row" id="temperatureSetpoints">
+                                    <div class="col-md-6" id="coolSetpointDiv" style="display: none;">
+                                        <div class="mb-3">
+                                            <label for="coolSetpoint" class="form-label">Cool Setpoint (°F)</label>
+                                            <input type="number" class="form-control" id="coolSetpoint" min="60" max="90" step="1">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6" id="heatSetpointDiv" style="display: none;">
+                                        <div class="mb-3">
+                                            <label for="heatSetpoint" class="form-label">Heat Setpoint (°F)</label>
+                                            <input type="number" class="form-control" id="heatSetpoint" min="50" max="85" step="1">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Lighting Settings -->
+                        <div class="card bg-secondary mb-3" id="lightingSettings" style="display: none;">
+                            <div class="card-header">
+                                <h6 class="mb-0">Lighting Settings</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="lightingStatus" class="form-label">Light Status</label>
+                                    <select class="form-select" id="lightingStatus">
+                                        <option value="on">On</option>
+                                        <option value="off">Off</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Humidistat Settings -->
+                        <div class="card bg-secondary mb-3" id="humidistatSettings" style="display: none;">
+                            <div class="card-header">
+                                <h6 class="mb-0">Humidistat Settings</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="humidityLowSetpoint" class="form-label">Low Humidity Setpoint (%)</label>
+                                            <input type="number" class="form-control" id="humidityLowSetpoint" min="20" max="60" step="5" value="30">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="humidityHighSetpoint" class="form-label">High Humidity Setpoint (%)</label>
+                                            <input type="number" class="form-control" id="humidityHighSetpoint" min="40" max="80" step="5" value="60">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Thermostat + Humidistat Settings -->
+                        <div class="card bg-secondary mb-3" id="thermostatHumidistatSettings" style="display: none;">
+                            <div class="card-header">
+                                <h6 class="mb-0">HVAC + Humidity Settings</h6>
+                            </div>
+                            <div class="card-body">
+                                <!-- HVAC Controls -->
+                                <h6 class="text-primary mb-3">HVAC Controls</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="systemModeCombined" class="form-label">System Mode</label>
+                                            <select class="form-select" id="systemModeCombined">
+                                                <option value="Cool">Cool</option>
+                                                <option value="Heat">Heat</option>
+                                                <option value="Auto">Auto</option>
+                                                <option value="Off">Off</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="fanSettingCombined" class="form-label">Fan Setting</label>
+                                            <select class="form-select" id="fanSettingCombined">
+                                                <option value="auto">Auto</option>
+                                                <option value="10">10 min/hr</option>
+                                                <option value="20">20 min/hr</option>
+                                                <option value="30">30 min/hr</option>
+                                                <option value="40">40 min/hr</option>
+                                                <option value="50">50 min/hr</option>
+                                                <option value="60">60 min/hr</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row" id="temperatureSetpointsCombined">
+                                    <div class="col-md-6" id="coolSetpointDivCombined" style="display: none;">
+                                        <div class="mb-3">
+                                            <label for="coolSetpointCombined" class="form-label">Cool Setpoint (°F)</label>
+                                            <input type="number" class="form-control" id="coolSetpointCombined" min="60" max="90" step="1">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6" id="heatSetpointDivCombined" style="display: none;">
+                                        <div class="mb-3">
+                                            <label for="heatSetpointCombined" class="form-label">Heat Setpoint (°F)</label>
+                                            <input type="number" class="form-control" id="heatSetpointCombined" min="50" max="85" step="1">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Humidity Controls -->
+                                <h6 class="text-primary mb-3 mt-4">Humidity Controls</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="humidityLowSetpointCombined" class="form-label">Low Humidity Setpoint (%)</label>
+                                            <input type="number" class="form-control" id="humidityLowSetpointCombined" min="20" max="60" step="5" value="30">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="humidityHighSetpointCombined" class="form-label">High Humidity Setpoint (%)</label>
+                                            <input type="number" class="form-control" id="humidityHighSetpointCombined" min="40" max="80" step="5" value="60">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="cancelEventBtn" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="deleteEventBtn" style="display: none;">
+                        <i class="fas fa-trash me-1"></i>
+                        Delete
+                    </button>
+                    <button type="button" class="btn btn-primary" id="saveEventBtn">
+                        <i class="fas fa-save me-1"></i>
+                        Save Event
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Event Edit Scope Modal -->
+    <div class="modal fade" id="editScopeModal" tabindex="-1" aria-labelledby="editScopeModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editScopeModalLabel">
+                        <i class="fas fa-edit me-2"></i>Edit Current Setting
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-light mb-3">This is a recurring event. What would you like to edit?</p>
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-primary" id="editSingleEventBtn">
+                            <i class="fas fa-calendar-day me-2"></i>
+                            This Event Only
+                            <small class="d-block text-light opacity-75">Edit only this specific occurrence</small>
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" id="editAllEventsBtn">
+                            <i class="fas fa-calendar-alt me-2"></i>
+                            All Events in Series
+                            <small class="d-block text-light opacity-75">Edit all occurrences of this recurring event</small>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Scope Modal -->
+    <div class="modal fade" id="deleteScopeModal" tabindex="-1" aria-labelledby="deleteScopeModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteScopeModalLabel">
+                        <i class="fas fa-trash me-2"></i>Delete Event
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-light mb-3">This is a recurring event. What would you like to delete?</p>
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-danger" id="deleteSingleEventBtn">
+                            <i class="fas fa-calendar-day me-2"></i>
+                            This Event Only
+                            <small class="d-block text-light opacity-75">Delete only this specific occurrence</small>
+                        </button>
+                        <button type="button" class="btn btn-outline-danger" id="deleteAllEventsBtn">
+                            <i class="fas fa-calendar-alt me-2"></i>
+                            All Events in Series
+                            <small class="d-block text-light opacity-75">Delete all occurrences of this recurring event</small>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- FullCalendar JS -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/action-handler-simple.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/scheduler.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/calendar-view.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/list-view.js') }}"></script>
+    
+    <!-- Initialize the scheduler -->
+    <script>
+        let hvacScheduler;
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                hvacScheduler = new HVACScheduler();
+                window.scheduler = hvacScheduler; // Make globally accessible
+                await hvacScheduler.init();
+            } catch (error) {
+                console.error('Error initializing scheduler:', error);
+            }
+        });
+    </script>
+</body>
+</html>

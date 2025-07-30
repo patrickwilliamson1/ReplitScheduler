@@ -1,0 +1,437 @@
+/* HVAC Scheduler Widget - Dark Theme Styles */
+:root {
+    --primary-color: #0d6efd;
+    --secondary-color: #6c757d;
+    --success-color: #198754;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #0dcaf0;
+    --dark-color: #212529;
+    --bg-dark: #1a1a1a;
+    --bg-secondary: #2d3748;
+    --border-color: #495057;
+    --text-light: #f8f9fa;
+    --text-muted: #adb5bd;
+}
+
+/* Body and base styles */
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-light);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Main content container */
+.main-content {
+    height: calc(100vh - 120px);
+    overflow: hidden;
+}
+
+/* Calendar with header adjustments */
+#calendarViewContainer #calendar {
+    height: calc(100% - 60px);
+}
+
+.view-container {
+    height: 100%;
+}
+
+/* Header styles */
+.navbar {
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.navbar-brand {
+    font-weight: 600;
+    font-size: 1.2rem;
+}
+
+/* View toggle styles */
+.btn-group .btn {
+    border-color: var(--border-color);
+}
+
+.btn-check:checked + .btn-outline-secondary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+/* Calendar styles */
+#calendar {
+    background-color: var(--bg-dark);
+    color: var(--text-light);
+    padding: 15px;
+}
+
+.fc {
+    --fc-bg-event-color: var(--primary-color);
+    --fc-bg-event-opacity: 0.9;
+    --fc-border-color: var(--border-color);
+    --fc-button-bg-color: var(--secondary-color);
+    --fc-button-border-color: var(--border-color);
+    --fc-button-hover-bg-color: var(--primary-color);
+    --fc-button-active-bg-color: var(--primary-color);
+    --fc-today-bg-color: rgba(13, 110, 253, 0.1);
+    --fc-neutral-bg-color: var(--bg-secondary);
+    --fc-neutral-text-color: var(--text-light);
+    --fc-list-event-hover-bg-color: var(--bg-secondary);
+}
+
+.fc-theme-standard .fc-popover {
+    background-color: var(--bg-secondary);
+    border-color: var(--border-color);
+    color: var(--text-light);
+}
+
+.fc-theme-standard .fc-popover-header {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.fc-event {
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.fc-event:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.fc-event.occupied {
+    background-color: var(--success-color);
+}
+
+.fc-event.unoccupied {
+    background-color: var(--secondary-color);
+}
+
+.fc-event.custom {
+    background-color: var(--info-color);
+}
+
+.fc-event.default-unoccupied {
+    background-color: var(--warning-color);
+    border: 2px dashed var(--dark-color);
+}
+
+/* Sidebar styles */
+.sidebar {
+    background-color: var(--bg-secondary);
+    height: 100%;
+    overflow-y: auto;
+}
+
+.sidebar .card {
+    border: 1px solid var(--border-color);
+}
+
+.sidebar .card-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+/* Status display styles */
+.status-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.status-item:last-child {
+    border-bottom: none;
+}
+
+.status-label {
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.status-value {
+    font-weight: 600;
+    color: var(--text-light);
+}
+
+/* Modal styles */
+.modal-content {
+    border: 1px solid var(--border-color);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.modal-header {
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-footer {
+    border-top: 1px solid var(--border-color);
+}
+
+/* Form styles */
+.form-control,
+.form-select {
+    background-color: var(--bg-secondary);
+    border-color: var(--border-color);
+    color: var(--text-light);
+}
+
+.form-control:focus,
+.form-select:focus {
+    background-color: var(--bg-secondary);
+    border-color: var(--primary-color);
+    color: var(--text-light);
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.form-label {
+    color: var(--text-light);
+    font-weight: 500;
+}
+
+.form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* List view styles */
+.schedule-item {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    transition: all 0.2s ease;
+}
+
+.schedule-item:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.schedule-item.active {
+    border-color: var(--success-color);
+    background-color: rgba(25, 135, 84, 0.1);
+}
+
+.schedule-item.default {
+    border-color: var(--warning-color);
+    background-color: rgba(255, 193, 7, 0.1);
+}
+
+.schedule-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.schedule-name {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: var(--text-light);
+}
+
+.schedule-type {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.schedule-time {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.schedule-settings {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.setting-item {
+    background-color: var(--dark-color);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+
+.setting-label {
+    color: var(--text-muted);
+    margin-right: 0.25rem;
+}
+
+.setting-value {
+    color: var(--text-light);
+    font-weight: 500;
+}
+
+/* Current settings panel */
+.current-settings {
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.setting-group {
+    margin-bottom: 1rem;
+}
+
+.setting-group:last-child {
+    margin-bottom: 0;
+}
+
+.setting-group-title {
+    font-weight: 600;
+    color: var(--text-light);
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .main-content {
+        height: calc(100vh - 100px);
+    }
+    
+    .sidebar {
+        position: fixed;
+        top: 100px;
+        right: -300px;
+        width: 300px;
+        z-index: 1000;
+        transition: right 0.3s ease;
+        box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
+    }
+    
+    .sidebar.show {
+        right: 0;
+    }
+    
+    .schedule-settings {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .modal-dialog {
+        margin: 1rem;
+    }
+}
+
+/* FullCalendar customizations */
+.fc-event-time {
+    display: none !important; /* Hide the time display in events */
+}
+
+.fc-event-title-container {
+    padding: 2px 4px;
+}
+
+/* Loading states */
+.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+}
+
+/* Error states */
+.error-message {
+    background-color: rgba(220, 53, 69, 0.1);
+    border: 1px solid var(--danger-color);
+    color: var(--danger-color);
+    padding: 1rem;
+    border-radius: 8px;
+    margin: 1rem 0;
+}
+
+/* Success states */
+.success-message {
+    background-color: rgba(25, 135, 84, 0.1);
+    border: 1px solid var(--success-color);
+    color: var(--success-color);
+    padding: 1rem;
+    border-radius: 8px;
+    margin: 1rem 0;
+}
+
+/* Scrollbar styles for webkit browsers */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-dark);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--secondary-color);
+}
+
+/* Animation classes */
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.slide-in {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Print styles */
+@media print {
+    .navbar,
+    .modal,
+    .btn-group {
+        display: none !important;
+    }
+    
+    .main-content {
+        height: auto;
+    }
+    
+    body {
+        background-color: white;
+        color: black;
+    }
+}
